@@ -1,48 +1,82 @@
-import React, {useState} from 'react';
-import { StyleSheet, Text, View, Button, TextInput, ScrollView, FlatList, TouchableOpacity } from 'react-native';
-import Header from './Components/Header';
+import React, { useState, useEffect } from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  Button,
+  TextInput,
+  ScrollView,
+  FlatList,
+  Keyboard,
+  TouchableWithoutFeedback,
+} from "react-native";
+import { AsyncStorage } from "react-native";
+import Header from "./Components/Header";
+import Item from "./Components/Items";
+import InputBar from "./Components/InputBar";
 
 export default function App() {
-  const [todo, setTodo] = useState([
-    {text: 'buy coffee', id: '1'},
-    {text: 'buy coffee', id: '2'},
-    {text: 'buy coffee', id: '3'},
-    {text: 'buy coffee', id: '4'},
-  ])
+  const [todo, setTodo] = useState([]);
 
-  const handleCLick = (id)=>{
-    console.log(id)
-  }
+  useEffect(() => {
+    handleStorage();
+  }, [todo]);
+
+  const handleStorage = async () => {
+    const arr = await AsyncStorage.getItem("tasks");
+    setTodo(JSON.parse(arr));
+  };
+  const handleDelete = async (ind) => {
+    await AsyncStorage.setItem(
+      "tasks",
+      JSON.stringify(todo.filter((item, index) => index != ind))
+    );
+    handleStorage();
+  };
+
+  const handleSubmit = async (val) => {
+    if (todo.length > 0) {
+      let putArr = [...todo, { text: val }];
+      await AsyncStorage.setItem("tasks", JSON.stringify(putArr));
+    } else {
+      let putArr = [{ text: val }];
+      await AsyncStorage.setItem("tasks", JSON.stringify(putArr));
+    }
+    handleStorage();
+  };
   return (
-    <View style={styles.container}>
-      <Header/>
-      <View>
-        <FlatList
-        data={todo}
-        renderItem={({ item })=>(
-          <TouchableOpacity onPress={()=>handleCLick(item.id)}>
-            <Text style={styles.text}>{item.text}</Text>
-          </TouchableOpacity>
-        )}
-        keyExtractor={(item)=>item.id}
-        />
+    <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+      <View style={styles.container}>
+          <Header />
+        <View style={styles.inputbar}>
+          <InputBar handleSubmit={handleSubmit} />
+          <View style={styles.list}>
+            <FlatList
+              data={todo}
+              renderItem={({ item, index }) => (
+                <Item item={item} index={index} handleDelete={handleDelete} />
+              )}
+              keyExtractor={(item, index) => index}
+            />
+          </View>
+        </View>
       </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 2,
-    backgroundColor: '#fff',
+    flex: 1,
+    backgroundColor: "#fff",
   },
-  text:{
-    padding:2,
-    backgroundColor:'#6ab7ff',
+  inputbar: {
+    flex: 1,
     marginTop:10,
-    fontSize:24,
-    color:"white",
-    fontWeight:'bold'
-  }
-  
+    padding:30
+  },
+  list: {
+    flex: 1,
+    marginTop:20
+  },
 });

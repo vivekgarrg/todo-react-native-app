@@ -1,9 +1,10 @@
-import React from "react";
+import React, {useEffect} from "react";
 import { Text, View, StyleSheet } from "react-native";
 
 
+
 export default function Header(){
-    return(
+        return(
         <View style={styles.header}>
             <Text style={styles.text}>Todo List</Text>
         </View>
